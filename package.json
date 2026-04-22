@@ -1,0 +1,9 @@
+{
+  "name": "kuveytturk-api",
+  "version": "1.0.0",
+  "description": "API proxy for Kuveyt Turk funds data",
+  "dependencies": {
+    "node-fetch": "^2.7.0",
+    "cheerio": "^1.0.0"
+  }
+}
