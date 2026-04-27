@@ -73,8 +73,11 @@ module.exports = async (req, res) => {
 
     const data = await geminiRes.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    const clean = text.replace(/```json|```/g, '').trim()
-    const parsed = JSON.parse(clean)
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) throw new Error('No JSON found in response')
+    const parsed = JSON.parse(jsonMatch[0])
 
     res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600')
     res.status(200).json({ success: true, ...parsed })
