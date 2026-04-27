@@ -11,9 +11,9 @@ module.exports = async (req, res) => {
   }
 
   const lang = req.query.lang || 'ar'
+  let jsonText = ''
 
   try {
-    // Step 1: Search with Gemini
     const searchRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
@@ -41,10 +41,13 @@ module.exports = async (req, res) => {
       .join('') || ''
 
     if (!rawText) {
-      return res.status(500).json({ success: false, error: 'Empty response from Gemini', debug: JSON.stringify(searchData).slice(0, 300) })
+      return res.status(500).json({
+        success: false,
+        error: 'Empty response from Gemini',
+        debug: JSON.stringify(searchData).slice(0, 300)
+      })
     }
 
-    // Step 2: Convert to JSON
     const convertRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
@@ -55,7 +58,6 @@ module.exports = async (req, res) => {
             role: 'user',
             parts: [{ text: `حوّل هذا النص إلى JSON فقط بدون أي نص إضافي:
 {"news":[{"title":"...","summary":"...","source":"...","date":"...","category":"صناديق أو اقتصاد أو ذهب أو عملات أو إسلامي"}]}
-
 النص:
 ${rawText.slice(0, 2000)}` }]
           }],
@@ -69,7 +71,7 @@ ${rawText.slice(0, 2000)}` }]
     )
 
     const convertData = await convertRes.json()
-    const jsonText = convertData.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    jsonText = convertData.candidates?.[0]?.content?.parts?.[0]?.text || ''
     const clean = jsonText.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
 
@@ -77,6 +79,6 @@ ${rawText.slice(0, 2000)}` }]
     res.status(200).json({ success: true, ...parsed, generatedAt: new Date().toISOString() })
 
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message, raw: jsonText?.slice(0, 500) })
+    res.status(500).json({ success: false, error: err.message, raw: jsonText.slice(0, 500) })
   }
 }
