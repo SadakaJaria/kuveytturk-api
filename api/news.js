@@ -77,6 +77,6 @@ ${rawText.slice(0, 2000)}` }]
     res.status(200).json({ success: true, ...parsed, generatedAt: new Date().toISOString() })
 
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message })
+    res.status(500).json({ success: false, error: err.message, raw: jsonText?.slice(0, 500) })
   }
 }
