@@ -13,48 +13,20 @@ module.exports = async (req, res) => {
   const lang = req.query.lang || 'ar'
 
   const prompts = {
-    ar: `ابحث عن آخر 8 أخبار حديثة عن "كويت ترك" أو "Kuveyt Türk" أو صناديق الاستثمار الإسلامية في تركيا خلال الأيام الماضية.
-    
-    أعد النتيجة كـ JSON فقط بدون أي نص إضافي أو markdown، بهذا الشكل:
-    {
-      "news": [
-        {
-          "title": "عنوان الخبر بالعربي",
-          "summary": "ملخص الخبر بالعربي في جملتين",
-          "source": "اسم المصدر",
-          "date": "تاريخ تقريبي",
-          "category": "واحدة من: صناديق | اقتصاد | ذهب | عملات | إسلامي"
-        }
-      ]
-    }`,
-    en: `Search for the latest 8 news about "Kuveyt Türk" or Islamic investment funds in Turkey from recent days.
-    
-    Return only JSON without any extra text or markdown:
-    {
-      "news": [
-        {
-          "title": "News title in English",
-          "summary": "Two sentence summary in English",
-          "source": "Source name",
-          "date": "Approximate date",
-          "category": "One of: funds | economy | gold | currencies | islamic"
-        }
-      ]
-    }`,
-    tr: `Kuveyt Türk veya Türkiye'deki İslami yatırım fonları hakkında son günlerden 8 güncel haber ara.
-    
-    Sadece JSON döndür, başka metin veya markdown olmadan:
-    {
-      "news": [
-        {
-          "title": "Türkçe haber başlığı",
-          "summary": "İki cümlelik Türkçe özet",
-          "source": "Kaynak adı",
-          "date": "Yaklaşık tarih",
-          "category": "Şunlardan biri: fonlar | ekonomi | altın | döviz | islami"
-        }
-      ]
-    }`
+    ar: `ابحث الآن في الإنترنت عن آخر أخبار كويت ترك وصناديق المشاركة الإسلامية في تركيا.
+
+بعد البحث، أعطني النتائج بصيغة JSON فقط، بدون أي نص قبله أو بعده، بهذا الشكل بالضبط:
+{"news":[{"title":"عنوان الخبر","summary":"ملخص جملتين","source":"اسم المصدر","date":"التاريخ","category":"صناديق أو اقتصاد أو ذهب أو عملات أو إسلامي","url":"رابط الخبر إن وجد"}]}`,
+
+    en: `Search the internet now for the latest news about Kuveyt Türk and Islamic participation funds in Turkey.
+
+After searching, return results as JSON only, no text before or after:
+{"news":[{"title":"title","summary":"two sentence summary","source":"source name","date":"date","category":"funds or economy or gold or currencies or islamic","url":"article url if available"}]}`,
+
+    tr: `Kuveyt Türk ve Türkiye'deki İslami katılım fonları hakkında internette şimdi ara.
+
+Aradıktan sonra, önce veya sonra metin olmadan yalnızca JSON döndür:
+{"news":[{"title":"başlık","summary":"iki cümle özet","source":"kaynak adı","date":"tarih","category":"fonlar veya ekonomi veya altın veya döviz veya islami","url":"makale url varsa"}]}`
   }
 
   try {
@@ -66,21 +38,34 @@ module.exports = async (req, res) => {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: prompts[lang] || prompts.ar }] }],
           tools: [{ googleSearch: {} }],
-          generationConfig: { maxOutputTokens: 2000, temperature: 0.3 }
+          generationConfig: {
+            maxOutputTokens: 3000,
+            temperature: 0.1
+          }
         })
       }
     )
 
     const data = await geminiRes.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON found in response')
+    // Try all parts — Gemini sometimes puts JSON in different parts
+    const parts = data.candidates?.[0]?.content?.parts || []
+    let text = ''
+    for (const part of parts) {
+      if (part.text) text += part.text
+    }
+
+    // Try to extract JSON
+    const jsonMatch = text.match(/\{[\s\S]*"news"[\s\S]*\}/)
+    if (!jsonMatch) {
+      // Return raw for debugging
+      return res.status(500).json({ success: false, error: 'No JSON found', raw: text.slice(0, 500) })
+    }
+
     const parsed = JSON.parse(jsonMatch[0])
-
     res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600')
-    res.status(200).json({ success: true, ...parsed })
+    res.status(200).json({ success: true, ...parsed, generatedAt: new Date().toISOString() })
+
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
   }
