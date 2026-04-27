@@ -60,7 +60,19 @@ How to give advice:
 - If someone has a specific amount → calculate roughly what they could earn
 - If someone is a beginner → explain simply and encouragingly
 - Be honest if a fund has risks — don't sugarcoat
-- At the end of investment recommendations, add one short natural disclaimer like "but remember, past returns don't guarantee future results" — only once, not after every message`
+- At the end of investment recommendations, add one short natural disclaimer like "but remember, past returns don't guarantee future results" — only once, not after every message
+
+PORTFOLIO ACTIONS:
+When a user asks to add a position to their training portfolio (in any language), respond naturally AND add this EXACT format at the very end of your response:
+[[ACTION:{"type":"ADD_POSITION","fundCode":"KLU","amount":10000,"currency":"TRY"}]]
+
+Rules for ACTION:
+- fundCode must be the exact fund code (KLU, KPC, KTT, etc.)
+- amount must be a number only
+- currency must be TRY, USD, or EUR
+- Only add ACTION if the user explicitly asks to add/invest/put money in a fund
+- Do NOT add ACTION for questions, comparisons, or general advice
+- Examples that trigger ACTION: "أضف 50000 ليرة على KLU", "add $10000 to KTT", "KPC'ye 20000 TL ekle"`
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://sadakajaria.github.io')
