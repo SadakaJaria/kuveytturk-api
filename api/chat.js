@@ -61,10 +61,11 @@ module.exports = async (req, res) => {
     }
 
     // Get live fund data
-    const liveData = await getLiveFunds()
+   const liveData = await getLiveFunds()
+    const today = new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     const systemPrompt = liveData
-      ? `${BASE_PROMPT}\n\n${liveData}`
-      : BASE_PROMPT
+      ? `${BASE_PROMPT}\n\nToday's date: ${today}\n\n${liveData}`
+      : `${BASE_PROMPT}\n\nToday's date: ${today}`
 
     const history = messages.slice(0, -1).map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
