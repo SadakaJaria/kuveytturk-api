@@ -51,7 +51,7 @@ async function scrapePage(url, $funds) {
         const cells = $(row).find('td')
         if (cells.length < 8) return
         const linkText = $(cells[0]).find('a').text().trim()
-        const codeMatch = linkText.match(/^([A-ZİÇŞ]{2,3})-/)
+        const codeMatch = linkText.match(/^([A-ZİÇŞ0-9]{2,4})-/)
         if (!codeMatch) return
         const code = codeMatch[1]
         if ($funds[code]) return // already have data
