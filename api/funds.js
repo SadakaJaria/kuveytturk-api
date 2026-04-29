@@ -29,6 +29,8 @@ const FUND_META = {
   KZU: { category: 'metals', riskLevel: 6, managementFee: 2.0, stoppageRate: 0, buyingValue: 'T+1' },
   KUT: { category: 'metals', riskLevel: 6, managementFee: 2.0, stoppageRate: 0, buyingValue: 'T+1' },
   KGM: { category: 'metals', riskLevel: 6, managementFee: 2.0, stoppageRate: 0, buyingValue: 'T+1' },
+  KU3: { category: 'domestic', riskLevel: 5, managementFee: 2.2, stoppageRate: 0, buyingValue: 'T+1' },
+  KIK: { category: 'foreign', riskLevel: 6, managementFee: 2.5, stoppageRate: 17.5, buyingValue: 'T+1' },
 }
 
 async function scrapeFundReturns() {
